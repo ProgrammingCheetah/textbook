@@ -5,13 +5,14 @@
 #import "common.typ": *
 #import "notes.typ": *
 #import "env.typ": show-env, show-example
+#import "boxes.typ": icon
 
 // ---------- running heads ----------
 
-#let _opener-page(p) = query(heading.where(level: 1)).any(h => h.location().page() == p)
+#let _opener-page(p) = (query(heading.where(level: 1)) + query(<tb-part>)).any(h => h.location().page() == p)
 
 #let _blank-page(p) = {
-  let next-opens = query(heading.where(level: 1)).any(h => h.location().page() == p + 1)
+  let next-opens = (query(heading.where(level: 1)) + query(<tb-part>)).any(h => h.location().page() == p + 1)
   let ends = query(<tb-end>).map(e => e.location().page()).filter(x => x <= p)
   next-opens and ends.len() > 0 and ends.last() < p
 }
@@ -203,16 +204,30 @@
   },
 )
 
-#let _how-to-read() = {
-  heading(level: 1, numbering: none, outlined: false, [How to use this book])
-  set par(justify: true)
-  [Each chapter opens with an outline in the margin and a list of what you will be able to do by the end. Sections build one idea on the last. The main column carries the explanation; the wide outer column carries short notes you can read on a second pass.]
-  v(0.6em)
+/// The legend of icons and boxes, as used in "Icons used in this book".
+#let device-legend() = {
+  let row(badge, name, color, desc) = (
+    box(width: 100%, inset: (y: 3pt), { if badge != none { badge; h(5pt) }; label-text(name, color: color, size: 7pt) }),
+    text(size: 9.6pt, desc),
+  )
   let swatch(color, fill, name, desc) = (
     block(width: 100%, fill: fill, stroke: (left: 2.5pt + color), inset: (x: 6pt, y: 5pt),
       label-text(name, color: color, size: 6.8pt)),
     text(size: 9.6pt, desc),
   )
+  [In the outer margin, an icon tells you what kind of note you are looking at:]
+  v(0.4em)
+  grid(columns: (3.6cm, 1fr), row-gutter: 6pt, column-gutter: 10pt, align: horizon,
+    ..row(icon("remember"), "Remember", accent, [The one thing from this passage worth keeping. If you read nothing else on the page, read these.]),
+    ..row(icon("tip"), "Tip", teal, [A shortcut or habit that saves time, money or a second trip to the store.]),
+    ..row(icon("warning"), "Warning", red, [Something that can hurt you, damage a part, or cost you a redo. Never skip these.]),
+    ..row(icon("trade"), "In the trade", green, [How professionals actually do it.]),
+    ..row(icon("key"), "Key term", blue, [A word you will meet again. All of them are collected in the Glossary.]),
+    ..row(icon("fact"), "Did you know?", purple, [A curious fact. Safe to skip.]),
+  )
+  v(0.6em)
+  [In the main column, colored boxes carry the structure of the lesson:]
+  v(0.4em)
   grid(columns: (3.6cm, 1fr), row-gutter: 6pt, column-gutter: 10pt, align: horizon,
     ..swatch(blue, blue-soft, "Definition", [Fixes the meaning of a word. Numbered so you can find it again.]),
     ..swatch(accent, accent-soft, "Theorem · Principle", [A rule the build depends on. Theorems come with a short proof when the reasoning is the point.]),
@@ -220,16 +235,110 @@
     ..swatch(teal, teal-soft, "Why it works", [The physical picture behind a rule, so you can rebuild it from memory.]),
     ..swatch(sepia, sepia-soft, "A bit of history", [Where an idea or a standard came from, and why it stuck.]),
     ..swatch(ink, shade, "Before you begin", [What you should already know, and where to catch up.]),
+    ..swatch(muted, shade, "Deep dive", [Technical detail the build does not need. Safe to skip.]),
     ..swatch(red, red-soft, "Common mistake", [What people get wrong, what to do instead, and why.]),
     ..swatch(blue, white, "Check yourself", [Two or three quick questions at the end of a section. Answers at the back.]),
     ..swatch(accent, white, "Read more", [Hand-picked articles, datasheets and videos to go deeper. All collected again in Further Reading.]),
-    ..swatch(blue, blue-soft, "Key term", [Margin: a word you will meet again. Collected in the Glossary.]),
-    ..swatch(red, red-soft, "Watch out", [Margin: a safety or failure warning.]),
-    ..swatch(green, green-soft, "In the trade", [Margin: how professionals actually do it.]),
-    ..swatch(purple, purple-soft, "Did you know?", [Margin: a curious fact. Safe to skip.]),
   )
-  v(0.6em)
-  [Problems close each chapter, marked ★ to ★★★ by difficulty. Superscript numbers point to the References. The back of the book has a glossary, a list of symbols, further reading, figure credits, an answer key and an index.]
+}
+
+#let _how-to-read() = {
+  heading(level: 1, numbering: none, outlined: false, [How to use this book])
+  device-legend()
+}
+
+/// The Introduction, in the classic reference-book order. Goes first in the
+/// main matter. Every argument is optional.
+///
+/// - about: what the book covers and how it is organized.
+/// - assumptions: array of things you assume about the reader.
+/// - beyond: what lives outside the book (cheat sheet, repo, configs).
+/// - where-next: where to start, depending on the reader.
+#let introduction(about: none, assumptions: (), beyond: none, where-next: none) = {
+  [#metadata(none)<tb-end>]
+  pagebreak(to: "odd", weak: true)
+  heading(level: 1, numbering: none, [Introduction])
+  let sec(t) = heading(level: 2, numbering: none, outlined: false, t)
+  if about != none { sec[About this book]; about }
+  if assumptions.len() > 0 {
+    sec[What I assume about you]
+    [This book makes a few assumptions about you. If they fit, you are in the right place:]
+    list(..assumptions)
+  }
+  sec[Icons used in this book]
+  device-legend()
+  if beyond != none { sec[Beyond the book]; beyond }
+  if where-next != none { sec[Where to go from here]; where-next }
+}
+
+// ---------- parts ----------
+
+/// A part divider: a full right-hand page that groups chapters.
+#let part(title, blurb: none) = {
+  [#metadata(none)<tb-end>]
+  pagebreak(to: "odd", weak: true)
+  counter("tb-part").step()
+  context {
+    let n = counter("tb-part").get().first()
+    [#metadata((title: title, num: n))<tb-part>]
+    let p = here().page()
+    let left-m = if is-recto(p) { m-inside } else { m-outside }
+    place(top + left, dx: -left-m, dy: -m-top, rect(width: paper-w, height: 100% + m-top + m-bottom, fill: accent-dark))
+    v(4cm)
+    label-text([Part #numbering("I", n)], color: accent-soft, size: 10pt)
+    v(0.3cm)
+    block(width: 100% + wide-extra, {
+      set par(leading: 0.3em, justify: false)
+      set text(hyphenate: false)
+      text(font: serif, size: 40pt, weight: "bold", fill: white, title)
+    })
+    v(0.8cm)
+    line(length: 4cm, stroke: 2pt + accent)
+    if blurb != none {
+      v(0.6cm)
+      block(width: 100%, text(size: 12pt, fill: white, blurb))
+    }
+    // chapters in this part
+    let here-loc = here()
+    let next = query(<tb-part>).filter(m => m.location().page() > p)
+    let chs = query(heading.where(level: 1).after(here-loc)).filter(h => h.numbering != none and not appendix-state.at(h.location()))
+    if next.len() > 0 { chs = chs.filter(h => h.location().page() < next.first().location().page()) }
+    if chs.len() > 0 {
+      v(1fr)
+      label-text([In this part], color: accent-soft)
+      v(4pt)
+      set text(fill: white, size: 10pt)
+      for h in chs {
+        grid(columns: (2em, 1fr), text(weight: "bold", fill: accent-soft, str(counter(heading).at(h.location()).first())), h.body)
+        v(-2pt)
+      }
+      v(1cm)
+    }
+  }
+}
+
+// ---------- contents ----------
+
+#let _toc(glance: false) = context {
+  let items = query(selector(<tb-part>).or(heading.where(level: 1)).or(heading.where(level: 2)))
+  items = items.filter(it => it.func() == metadata or (it.outlined and (not glance or it.level == 1)))
+  for it in items {
+    let loc = it.location()
+    let pg = link(loc, page-of(loc))
+    let dots = box(width: 1fr, repeat(text(fill: rule)[.#h(3pt)]))
+    if it.func() == metadata {
+      block(above: 1.4em, below: 0.5em, link(loc, text(font: sans, size: 8.6pt, weight: "bold", fill: accent, tracking: 0.06em,
+        upper[Part #numbering("I", it.value.num): #it.value.title])))
+    } else if it.level == 1 {
+      let num = if it.numbering != none { numbering(it.numbering, ..counter(heading).at(loc)) }
+      block(above: if glance { 0.5em } else { 0.9em }, below: 0.3em, text(font: serif, weight: "bold",
+        grid(columns: (1.8em, 1fr), num, link(loc, [#it.body #dots #pg]))))
+    } else {
+      let num = if it.numbering != none { numbering(it.numbering, ..counter(heading).at(loc)) }
+      block(above: 0.25em, below: 0.25em, pad(left: 1.8em, text(size: 9.6pt,
+        grid(columns: (2.4em, 1fr), num, link(loc, [#it.body #dots #pg])))))
+    }
+  }
 }
 
 // ---------- the book ----------
@@ -246,7 +355,9 @@
   abstract: none,
   author: "",
   meta: (),
-  how-to-read: true,
+  how-to-read: false,
+  glance: true,
+  cheat-sheet: none,
   lists: true,
   body,
 ) = {
@@ -319,14 +430,25 @@
 
   // ----- front matter -----
   _cover(title, subtitle, series, abstract, meta)
-  {
-    heading(level: 1, numbering: none, outlined: false, [Contents])
-    show outline.entry.where(level: 1): it => {
-      set block(above: 1.1em)
-      text(font: serif, weight: "bold", it)
-    }
-    outline(title: none, depth: 2, indent: 1.4em)
+  if cheat-sheet != none {
+    page(header: none, footer: none, margin: (x: 1.6cm, y: 1.6cm), {
+      block(width: 100%, height: 100%, stroke: 2pt + accent-dark, inset: 14pt, {
+        grid(columns: (1fr, auto), align: bottom,
+          text(font: serif, size: 22pt, weight: "bold")[Cheat Sheet],
+          text(font: sans, size: 8pt, fill: muted, title))
+        v(-4pt)
+        line(length: 100%, stroke: 1pt + accent-dark)
+        columns(2, gutter: 14pt, cheat-sheet)
+      })
+    })
   }
+  if glance {
+    heading(level: 1, numbering: none, outlined: false, [Contents at a glance])
+    _toc(glance: true)
+  }
+  pagebreak(weak: true)
+  heading(level: 1, numbering: none, outlined: false, [Contents])
+  _toc()
   if how-to-read { pagebreak(weak: true); _how-to-read() }
   if lists {
     pagebreak(weak: true)

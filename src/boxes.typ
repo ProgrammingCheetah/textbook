@@ -32,8 +32,26 @@
 // Margin boxes
 // ======================================================================
 
-#let _sidebox(name, color, fill, body) = block(
+/// Round icon badge drawn natively (no image files).
+/// `kind`: "remember", "tip", "warning", "deep", "key", "trade", "fact".
+#let icon(kind, size: 13pt) = {
+  let glyphs = (remember: "!", tip: "✓", deep: "⚙", key: "A", trade: "⚒", fact: "?")
+  let colors = (remember: accent, tip: teal, warning: red, deep: muted, key: blue, trade: green, fact: purple)
+  let c = colors.at(kind, default: ink)
+  if kind == "warning" {
+    box(width: size, height: size * 0.9, baseline: 20%, {
+      place(polygon(fill: c, (0pt, size * 0.9), (size / 2, 0pt), (size, size * 0.9)))
+      place(center + bottom, dy: -size * 0.04, text(font: "DejaVu Sans", size: size * 0.55, weight: "bold", fill: white, "!"))
+    })
+  } else {
+    box(baseline: 20%, circle(radius: size / 2, fill: c, inset: 0pt,
+      align(center + horizon, text(font: "DejaVu Sans", size: size * 0.6, weight: "bold", fill: white, glyphs.at(kind, default: "•")))))
+  }
+}
+
+#let _sidebox(name, color, fill, body, kind: none) = block(
   width: 100%, fill: fill, inset: (x: 8pt, y: 7pt), radius: 2pt, {
+    if kind != none { icon(kind, size: 11pt); h(4pt) }
     label-text(name, color: color)
     v(1pt)
     body
@@ -45,17 +63,23 @@
 #let keyterm(t, body, dy: 0pt) = {
   [#metadata((term: t, body: body))<tb-term>]
   idx(t)
-  margin-note(dy: dy, _sidebox("Key term", blue, blue-soft)[*#t.* #body])
+  margin-note(dy: dy, _sidebox("Key term", blue, blue-soft, kind: "key")[*#t.* #body])
 }
 
-/// Safety or failure warning.
-#let watch-out(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Watch out", red, red-soft, body))
+/// Safety or failure warning. (Alias: warning.)
+#let watch-out(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Warning", red, red-soft, body, kind: "warning"))
 
 /// How professionals in the trade actually do it.
-#let trade(body, dy: 0pt) = margin-note(dy: dy, _sidebox("In the trade", green, green-soft, body))
+#let trade(body, dy: 0pt) = margin-note(dy: dy, _sidebox("In the trade", green, green-soft, body, kind: "trade"))
 
 /// A curious fact; not needed for the build.
-#let did-you-know(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Did you know?", purple, purple-soft, body))
+#let did-you-know(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Did you know?", purple, purple-soft, body, kind: "fact"))
+
+/// Remember: the one thing from this passage worth keeping.
+#let remember(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Remember", accent, accent-soft, body, kind: "remember"))
+
+/// Tip: a shortcut or habit that saves time or money.
+#let tip(body, dy: 0pt) = margin-note(dy: dy, _sidebox("Tip", teal, teal-soft, body, kind: "tip"))
 
 /// Plain margin remark with a thin rule.
 #let sidenote(body, dy: 0pt) = margin-note(dy: dy, block(
@@ -148,6 +172,44 @@
   )
 }
 
+/// Deep dive: technical detail the build does not need. Safe to skip.
+#let deep-dive(title: none, body) = block(
+  width: 100%, breakable: true, fill: shade, stroke: (top: 0.6pt + muted, bottom: 0.6pt + muted),
+  inset: (x: 12pt, y: 10pt), above: 1.2em, below: 1.2em, {
+    icon("deep", size: 11pt); h(4pt)
+    label-text([Deep dive · safe to skip], color: muted)
+    if title != none { v(2pt); text(font: serif, weight: "bold", size: 11pt, title) }
+    v(3pt)
+    set text(size: 9.6pt)
+    body
+  },
+)
+
+/// The Part of Tens: a list of short, numbered, punchy items.
+/// Each item is a (title, body) pair. Use in a "Ten ..." chapter.
+#let ten-list(..items) = {
+  for (i, (t, b)) in items.pos().enumerate() {
+    block(above: 1.1em, below: 1.1em, breakable: false, grid(
+      columns: (1.6cm, 1fr), column-gutter: 0.3cm,
+      text(font: serif, size: 30pt, weight: "bold", fill: accent, str(i + 1)),
+      {
+        v(4pt)
+        text(font: serif, size: 12.5pt, weight: "bold", t)
+        v(2pt)
+        b
+      }))
+  }
+}
+
+/// One block of the cheat sheet (see book(cheat-sheet: ...)).
+#let cheat-block(title, body) = block(width: 100%, breakable: false, above: 0.9em, below: 0.9em, {
+  block(width: 100%, fill: accent-dark, inset: (x: 6pt, y: 4pt), below: 4pt,
+    text(font: sans, size: 7.6pt, weight: "bold", fill: white, tracking: 0.06em, upper(title)))
+  set text(size: 8.6pt)
+  set par(justify: false, leading: 0.5em)
+  body
+})
+
 /// Learning objectives box for a chapter opener.
 #let objectives(..items) = block(
   width: 100%, stroke: (top: 2pt + ink, bottom: 0.5pt + rule), inset: (y: 10pt),
@@ -237,3 +299,5 @@
         body))
   }
 }
+
+#let warning = watch-out

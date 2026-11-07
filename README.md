@@ -1,6 +1,6 @@
 # textbook
 
-A Typst template for technical books in the style of a high school or first-year college textbook: chapter openers, numbered definitions and theorems, worked examples, margin notes, history and "why it works" boxes, check-yourself questions, read-more links, starred problems with an answer key, and a generated glossary, symbol list, further reading, figure credits and index.
+A Typst template for technical books in the style of a high school or first-year college textbook, organized like a good reference book (cheat sheet, introduction, parts, margin icons, Part of Tens): chapter openers, numbered definitions and theorems, worked examples, margin notes, history and "why it works" boxes, check-yourself questions, read-more links, starred problems with an answer key, and a generated glossary, symbol list, further reading, figure credits and index.
 
 Built for the BIFL & DIY build handbooks, usable for anything that wants this shape.
 

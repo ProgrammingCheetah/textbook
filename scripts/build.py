@@ -27,8 +27,11 @@ def main():
         link.parent.mkdir(parents=True, exist_ok=True)
         link.symlink_to(ROOT, target_is_directory=True)
     try:
-        typst.compile(str(src), output=str(out), root=str(root),
-                      font_paths=[str(ROOT / "fonts")], package_path=str(pkgs))
+        _, warnings = typst.compile_with_warnings(
+            str(src), output=str(out), root=str(root),
+            font_paths=[str(ROOT / "fonts")], package_path=str(pkgs))
+        for w in warnings:
+            print("warning:", getattr(w, "message", w), file=sys.stderr)
     except typst.TypstError as e:
         print(e.diagnostic or e.message, file=sys.stderr)
         sys.exit(1)

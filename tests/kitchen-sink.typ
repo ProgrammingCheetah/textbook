@@ -1,6 +1,9 @@
 #import "/src/lib.typ": *
 // Every component on a few pages. Build: python3 scripts/build.py tests/kitchen-sink.typ
-#show: book.with(title: [Test Book], series: [Volume I · Test], meta: (("Build", [x]),))
+#show: book.with(title: [Test Book], series: [Volume I · Test], meta: (("Build", [x]),),
+  cheat-sheet: [#cheat-block([Rules])[- One. - Two.] #cheat-block([More])[Text.]])
+#introduction(about: [About.], assumptions: ([You can read.],), beyond: [Beyond.], where-next: [Start anywhere.])
+#part([First Part], blurb: [What this part covers.])
 #chapter([First Chapter], lead: [Lead paragraph here.], objectives: ([one], [two]))
 == Section one
 #keyterm("Phosphor")[A coating.]
@@ -12,6 +15,9 @@ $ P = V I $ <eq:p>
 See @thm:f and #pref(<def:a>) and @eq:p.
 #example(title: [Sizing], steps: (([Given], [a]), ([Result], [b])))[]
 #watch-out[Careful.]
+#remember[Keep this.]
+#tip[Do this.]
+#deep-dive(title: [Detail])[#lorem(30)]
 #lorem(200)
 == Section two
 #history(era: "1879", title: [Edison])[#lorem(40)]
@@ -26,6 +32,9 @@ See @thm:f and #pref(<def:a>) and @eq:p.
 #chapter([Second])
 == S
 #lorem(50)
+#part([The Part of Tens])
+#chapter([Ten Things])
+#ten-list(([One], [Body.]), ([Two], [Body.]))
 #show: appendix
 #chapter([Spec])
 #wide(table(columns: 3, [a],[b],[c],[1],[2],[3]))

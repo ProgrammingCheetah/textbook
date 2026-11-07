@@ -6,8 +6,6 @@
 
 #import "theme.typ": *
 
-#let _mstate = state("tb-margin", (page: 0, bottom: 0pt))
-
 /// True on right-hand (odd) pages.
 #let is-recto(page) = calc.odd(page)
 
@@ -16,20 +14,31 @@
 
 /// Place `body` in the outer margin beside the following paragraph.
 /// `dy` nudges it vertically.
-#let margin-note(body, dy: 0pt) = context {
-  let pos = here().position()
+///
+/// Stacking is computed from markers (flow position + measured height) of
+/// every earlier note on the same page, so layout converges in two passes.
+#let margin-note(body, dy: 0pt) = {
   let content = block(width: note-w, {
     set text(font: sans, size: 8.2pt)
     set par(justify: false, leading: 0.55em, spacing: 0.7em)
     body
   })
-  let h = measure(content).height
-  let prev = _mstate.get()
-  let y = pos.y + dy
-  if prev.page == pos.page and y < prev.bottom + 6pt { y = prev.bottom + 6pt }
-  _mstate.update((page: pos.page, bottom: y + h))
-  let x = if is-recto(pos.page) { paper-w - m-outside + note-gap } else { m-outside - note-gap - note-w }
-  place(top + left, dx: x - _text-left(pos.page), dy: y - m-top, content)
+  context [#metadata((h: measure(content).height, dy: dy))<tb-mnote>]
+  context {
+    let me = query(selector(<tb-mnote>).before(here())).last()
+    let pos = me.location().position()
+    let bottom = -1000pt
+    let y = 0pt
+    for m in query(<tb-mnote>) {
+      let mp = m.location().position()
+      if mp.page != pos.page { continue }
+      y = calc.max(mp.y + m.value.dy, bottom + 6pt)
+      bottom = y + m.value.h
+      if m.location() == me.location() { break }
+    }
+    let x = if is-recto(pos.page) { paper-w - m-outside + note-gap } else { m-outside - note-gap - note-w }
+    place(top + left, dx: x - _text-left(pos.page), dy: y - m-top, content)
+  }
 }
 
 /// A block that spans the text column plus the margin column.

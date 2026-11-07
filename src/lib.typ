@@ -8,4 +8,4 @@
 #import "boxes.typ": *
 #import "figures.typ": photo, placeholder
 #import "backmatter.typ": pref, pageref, glossary, make-index, symbol-list, further-reading, figure-credits, answer-key
-#import "layout.typ": book, chapter, appendix, back-chapter
+#import "layout.typ": book, chapter, appendix, back-chapter, part, introduction, device-legend

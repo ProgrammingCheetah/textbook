@@ -17,7 +17,64 @@
     ("Prepared for", [Zuri]),
     ("Edition", [Second edition · 7 November 2026]),
   ),
+  cheat-sheet: [
+    #cheat-block([Key equations])[
+      #grid(columns: (1fr, auto), row-gutter: 5pt,
+        [PWM power], $overline(P) = D P_"full"$,
+        [Dimmest step], $D_"min" = 1 slash 2^n$,
+        [Gamma], $D = b^gamma, gamma = 2.8$,
+        [Power], $P = V I$,
+        [Ohm's law], $V = I R$,
+        [Two-wire drop], $Delta V = 2 I L r$,
+        [Illuminance], $E = Phi dot "UF" slash A$)
+    ]
+    #cheat-block([Sizing rules])[
+      - Supply: $P_"rated" >= 1.25 P_"load"$. If not, cap outputs in firmware.
+      - Strip: 20 W/m at full; about 10 m per feed at 24 V.
+      - Feed: keep drop under about 3% of 24 V. 14 AWG ≈ 8.3 mΩ/m.
+      - Deca: 5 A per channel, 30 A total.
+    ]
+    #cheat-block([Pads at a cut])[
+      V+ (shared) · R · G · B · WW · CW. Order varies by maker: read the printed letters, never the wire colors. Cut only on the printed line (every 41.6 mm).
+    ]
+    #cheat-block([Fault isolation])[
+      - One color dark on one segment → that pigtail or terminal.
+      - One color dark on all segments → GPIO mapping in YAML.
+      - Everything dark → supply, fuse, controller.
+      - Far end dim or yellow → voltage drop; inject power.
+      - Button works, app doesn't → Home Assistant or HomeKit Bridge.
+    ]
+    #cheat-block([Build order])[
+      + Flash and adopt in Home Assistant.
+      + Bench test with a 1 m offcut.
+      + Cut, join and light segments on the floor.
+      + Test-fit channel and diffusers on the bench.
+      + Mount, connect, 30-minute heat check.
+      + Expose to Apple Home. Stop. Document.
+    ]
+    #cheat-block([ESPHome output line])[
+      #text(size: 7.2pt, raw("- { platform: ledc, id: a_r, pin: GPIO_A_R,\n    frequency: 19531Hz, max_power: 0.8 }", lang: "yaml", block: true))
+    ]
+  ],
 )
+
+#introduction(
+  about: [
+    This is a book about lighting your apartment with LED strips you install, control and repair yourself. It teaches from first principles, the way a school textbook does, but every example uses the real numbers from your build. You don't need to read it in order. Each chapter stands on its own and points back to the pages it builds on, so you can jump straight to the part you need tonight.
+
+    The book is organized into parts. *Part I* explains how a lit room works: light, strips, dimming, power and control, each taught through the bedroom. Later volumes take one subsystem each and go deeper. *The Part of Tens* closes the book with short lists you can scan in a minute.
+  ],
+  assumptions: (
+    [You remember a little school physics: voltage, current and power. If not, Chapter 1 opens with a refresher.],
+    [You can use a screwdriver and a crimper, and you're willing to learn to read a datasheet.],
+    [You will never open a mains-voltage device. Everything you wire in this book runs at 24 V.],
+    [You run Home Assistant, or you're willing to. The book covers what happens when it's down.],
+  ),
+  beyond: [The Cheat Sheet at the front of this book collects the formulas, sizing rules and fault table on one page. The ESPHome configuration lives in your git repository, which is the real source of truth for the build.],
+  where-next: [If you're about to buy parts, start with Appendix B and the supply sizing in Section 1.4. If something is already installed and misbehaving, go to Appendix E. If you want to understand the whole system, start at Chapter 1 and read straight through.],
+)
+
+#part([How a Lit Room Works], blurb: [Five small systems make a ceiling of light: a source, a controller, a supply, a channel and the software that ties them together. This part builds each one, using the bedroom as the worked case.])
 
 // ======================================================================
 #chapter(
@@ -108,6 +165,7 @@ This structure makes faults readable. Because power is shared and the returns ar
 
 #theorem(title: [Fault isolation in a common-anode strip])[If one color fails along a whole segment while the other four work, the fault lies in that color's return path: its pad connection, its wire, or its switch. If all five fail together, the fault lies in the shared supply path.] <thm:fault>
 
+#remember[One dark color: look at that color's own wire. Everything dark: look at the supply.]
 #proof[The five colors share every part of the +24 V path. A break there removes voltage from all of them, so it cannot darken one color alone. The only parts unique to a single color are its own return pad, conductor and switch. A failure confined to one color must therefore be in one of those.]
 
 #mistake(
@@ -152,6 +210,10 @@ Two settings decide how good the dimming looks. *Frequency* is cycles per second
 At 8 bits there are 256 steps; at 12 bits there are 4,096. That sounds like plenty until you account for how eyes work. We see brightness roughly logarithmically, so firmware bends the requested brightness $b$ through a #term("gamma correction", display: [gamma]) curve before it becomes a duty cycle: $D = b^gamma$. ESPHome's default is $gamma = 2.8$.
 #notation($gamma$, [gamma exponent of the brightness curve])
 #notation($b$, [requested brightness, 0 to 1])
+
+#deep-dive(title: [Why the exponent is near 3])[
+  Your eye does not judge brightness linearly. The CIE 1976 lightness scale, L\*, which color scientists use to model perceived lightness, grows roughly with the cube root of luminance. To make equal slider steps *feel* equal, firmware has to undo that compression by raising brightness to a power near 3. Values between 2.2 and 3 are common; ESPHome's 2.8 sits at the steep end, which is why its dark end needs the extra bit depth.
+]
 
 #example(title: [How much of the slider is dead at the dark end?], steps: (
   ([Goal], [Find the slider position $b$ below which the output rounds to zero duty.]),
@@ -198,6 +260,7 @@ The supply is the only part of the build that touches mains, by design. It is a 
 #keyterm("Derating")[Running a part below its maximum rating to extend its life.]
 Strip datasheets give watts per meter; multiply by length for the load. A supply run near its limit runs hot, and heat is what ages its capacitors. The strip maker recommends 25% headroom @sll-strip.
 
+#remember[Size the supply at 1.25 × the load. If it doesn't fit, lower the load in firmware, not the margin.]
 #principle(title: [Supply sizing])[Choose a supply with rated power $P_"rated" >= 1.25 dot P_"load"$. If no suitable supply exists, *derate* the load in firmware until the inequality holds.] <pr:sizing>
 
 #watch-out[Buy supplies from authorized distributors such as DigiKey or Mouser. Counterfeit Mean Well units are common on marketplaces.]
@@ -368,13 +431,34 @@ Control happens in three layers. Each can fail without taking the layers below i
 #problem(level: 3, answer: [Open-ended. A good answer compares lux at the working plane (@ex:lux method) against a target for reading, about 300–500 lx, and notes that a cove light lights the ceiling first, so a task lamp may still be the better tool.])[Your partner wants to read in bed by the strip alone. Decide whether that works, stating every assumption you make.]
 
 #looking-ahead(
-  [This chapter gave each subsystem one section. The chapters that follow take one subsystem each and go a level deeper, still anchored to the apartment build.],
-  ([Ch. 2], [PWM and dimming], [Frequency versus bit depth, gamma curves, flicker metrics, and camera banding.]),
-  ([Ch. 3], [Voltage drop and power injection], [Resistance tables, injection layouts, and the living room's three-segment run.]),
-  ([Ch. 4], [Color science], [CCT, CRI versus TM-30, white balance between production batches.]),
-  ([Ch. 5], [Power supplies], [Switch-mode topology, why capacitors fail, and what a safety listing certifies.]),
-  ([Ch. 6], [ESPHome], [The YAML model, outputs versus lights, OTA updates, and keeping configs in git.]),
-  ([Ch. 7], [Home Assistant], [Entities, light groups, automations, and how HomeKit Bridge maps them.]),
+  [This chapter gave each subsystem one section. Later volumes take one subsystem each and go a level deeper, still anchored to the apartment build.],
+  ([▸], [PWM and dimming], [Frequency versus bit depth, gamma curves, flicker metrics, and camera banding.]),
+  ([▸], [Voltage drop and power injection], [Resistance tables, injection layouts, and the living room's three-segment run.]),
+  ([▸], [Color science], [CCT, CRI versus TM-30, white balance between production batches.]),
+  ([▸], [Power supplies], [Switch-mode topology, why capacitors fail, and what a safety listing certifies.]),
+  ([▸], [ESPHome], [The YAML model, outputs versus lights, OTA updates, and keeping configs in git.]),
+  ([▸], [Home Assistant], [Entities, light groups, automations, and how HomeKit Bridge maps them.]),
+)
+
+// ======================================================================
+#part([The Part of Tens], blurb: [Short lists you can read in a minute, standing in the hardware store or on a ladder.])
+
+#chapter(
+  [Ten Mistakes That Ruin an LED Build],
+  lead: [Every one of these has a section in this book behind it. Each costs either a redo, a part, or a ceiling's worth of channel.],
+)
+
+#ten-list(
+  ([Sizing the supply to exactly the load], [A supply at 100% runs hot and dries its capacitors fastest. Size at 1.25 × load, or cap the outputs in firmware (#pref(<pr:sizing>)).]),
+  ([Trusting pigtail wire colors], [Colors vary by maker and batch. Read the letters printed on the pads at every cut.]),
+  ([Cutting off the line], [A cut between marks leaves a partial circuit that never lights. Cut only on the printed line, every 41.6 mm.]),
+  ([Ignoring voltage drop], [A long thin feed turns the far end dim and yellow. Do the $Delta V = 2 I L r$ arithmetic before buying wire (@cor:drop).]),
+  ([Running past one feed], [At 24 V, plan on about 10 m per feed. Longer runs need power injection, or a split into segments.]),
+  ([Buying "12 mm" channel that isn't], [Internal ridges sized for 10 mm strips crush a COB strip. Test-fit one piece first.]),
+  ([Landing bare strands in screw terminals], [Strands splay and loosen. Use fork crimps or ferrules.]),
+  ([Buying a supply on a marketplace], [Counterfeit Mean Well units are common. Buy from an authorized distributor.]),
+  ([Mounting before the bench test], [Every fault is ten times harder to find on the ceiling. Light every segment on the floor first.]),
+  ([Choosing firmware for effects instead of dimming], [On an analog strip, 12-bit PWM under ESPHome fades to a nightlight; 8-bit can't (@ex:dead).]),
 )
 
 // ======================================================================
@@ -416,6 +500,7 @@ These are the interfaces every room shares. Changing one reopens the decision fo
   ),
   caption: [Bill of materials for the bedroom (instance 1 of 6).],
 ))
+#tip[Buy one channel piece first and test-fit the strip before ordering the other fourteen.]
 About \$340 before shipping. Each 7 m segment is one 5 m reel plus a 2 m piece from the third reel, joined with a strip-to-strip connector. Buy one channel piece first and test-fit the strip before ordering the rest.
 
 #chapter([ESPHome skeleton])

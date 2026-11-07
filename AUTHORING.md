@@ -4,7 +4,18 @@ How to write a book with this template. Written for people and for agents (Claud
 
 ## The shape of a book
 
-A book teaches one build from first principles, the way a high school or first-year college text does. Each chapter:
+A book teaches one build from first principles, the way a high school or first-year college text does. It borrows the structure of good reference books (the For Dummies series is the model): modular chapters you can enter anywhere, parts that group them, margin icons, a cheat sheet and a closing Part of Tens. Borrow the method only. Never copy that series' name, yellow-and-black trade dress, mascot or signature phrases.
+
+The book in order:
+
+1. **Cover**, then an optional one-page **Cheat Sheet** (`book(cheat-sheet: [...])` filled with `#cheat-block`s): the formulas, rules and tables the reader will want on the ladder.
+2. **Contents at a glance** (parts and chapters) and the full **Contents**, both generated.
+3. **Introduction** (`#introduction(...)`): About this book, What I assume about you, Icons used in this book (generated legend), Beyond the book, Where to go from here.
+4. **Parts** (`#part([title], blurb: [...])`): full-page dividers grouping chapters. The divider lists its chapters automatically.
+5. **Chapters**, then a final **Part of Tens** part: chapters of short numbered lists (`#ten-list`).
+6. **Appendices** and generated back matter.
+
+Each chapter:
 
 1. **Opens** with `#chapter(title, lead:, objectives:)`. The outline of sections is generated in the margin.
 2. Sets prerequisites in a `#background[...]` box when the reader needs anything from school physics or math.
@@ -29,12 +40,14 @@ Label them (`<thm:fault>`) and refer with `@thm:fault`, or `#pref(<thm:fault>)` 
 
 ### Margin (outer column)
 
-Call these **between paragraphs, right before the paragraph they belong to**. They stack if two land close together.
+Call these **between paragraphs, right before the paragraph they belong to**. They stack if two land close together. Each carries an icon, explained in the Introduction's legend.
 
 | Call | Color | Use for |
 |---|---|---|
+| `#remember[..]` | orange, ! | The one thing worth keeping from this passage |
+| `#tip[..]` | teal, ✓ | A shortcut or habit that saves time or money |
 | `#keyterm("Term")[def]` | blue | New vocabulary. Also feeds the glossary and index. `"Term"` must be a string. |
-| `#watch-out[..]` | red | Safety or failure warnings |
+| `#warning[..]` (alias `#watch-out`) | red, ▲ | Safety or failure warnings. Never optional reading. |
 | `#trade[..]` | green | How professionals actually do it |
 | `#did-you-know[..]` | purple | A curious fact, safe to skip |
 | `#sidenote[..]` | rule | Source notes, small caveats |
@@ -46,6 +59,8 @@ Keep margin notes to 1–3 sentences. A page holds about four before they run of
 
 | Call | Use for |
 |---|---|
+| `#deep-dive(title: [..])[..]` | Technical detail the build does not need, marked safe to skip |
+| `#ten-list((title, body), ..)` | Part of Tens items: big numbers, one short paragraph each |
 | `#history(era: "1827", title: [..], image: ..)[..]` | Where an idea or standard came from, and why it stuck. One per chapter or two, with a citation. |
 | `#background[..]` | Prerequisites and where to catch up |
 | `#intuition(title: [..])[..]` | "Why it works": the physical picture behind a rule |
@@ -78,6 +93,10 @@ Put sources in a Hayagriva `refs.yml` next to the book and cite with `@key`. Cit
 ```
 
 ## Writing rules
+
+- **Write to one reader, in the second person.** Plain, friendly, direct. Short sentences. Explain jargon the first time, then use it.
+- **Every chapter stands alone.** Assume the reader jumped in here. Point back with `#pref(<label>)` instead of assuming they read the earlier chapter.
+- **Mark what can be skipped.** Deep dives and Did-you-know notes are optional; Warnings never are. The main column without the skippable parts must still teach the build.
 
 - **Teach in order.** Definition, then the rule, then a worked example with the build's real numbers, then a check. Each section should be answerable without reading ahead.
 - **Every number has a source.** Datasheet values are cited. Assumptions are called assumptions (in the example and in a note under the References).
