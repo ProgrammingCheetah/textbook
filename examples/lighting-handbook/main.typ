@@ -142,7 +142,7 @@ Your strip is specified above 90 @sll-strip, the threshold most lighting designe
 #keyterm("COB")[Chip on board. Dense LED dies under one phosphor layer, giving a dotless line.]
 An LED strip is a #term("flexible printed circuit", display: [flexible printed circuit]): a thin ribbon of copper on polyimide, with LEDs soldered along it. Older strips use spaced packages called SMD, which show as a row of dots. Your strip is #term("COB"), chip on board: 840 tiny dies per meter under a continuous strip of phosphor @sll-strip, so it reads as one unbroken line.
 
-#photo(none, alt: [Macro photo: a COB strip lit at low brightness next to an SMD strip, showing the dotless line versus the row of dots.], caption: [COB and SMD strips side by side. The COB line is continuous because the phosphor is.], credit: "To source: Wikimedia Commons, CC BY-SA") <fig:cob>
+#figure(smd-vs-cob, caption: [SMD and COB strips, lit. SMD packages sit apart and show as dots; COB dies sit under one continuous phosphor strip and read as a line.]) <fig:cob>
 
 #trade[Small resistors on each circuit set the current through its LEDs. That is why the strip can run straight from a constant-voltage supply.]
 The strip repeats one short circuit along its length, each with copper pads at both ends. You can cut between any two. On your strip the interval is 41.6 mm @sll-strip, marked by a printed line.

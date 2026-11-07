@@ -188,3 +188,35 @@
       text(font: sans, size: 7.5pt, weight: "bold")[Door button]; linebreak(); _mono(size: 6pt)[momentary] })))
   })
 }
+
+// ---------- Figure: SMD vs COB strip, lit ----------
+#let smd-vs-cob = {
+  let L = 11cm
+  let H = 1.1cm
+  let glow = rgb("#ffb347")
+  let core = rgb("#fff4dc")
+  let strip(body) = box(width: L, height: H, {
+    place(rect(width: L, height: H, radius: 2pt, fill: rgb("#ece7da")))
+    place(dy: 0.12cm, line(length: L, stroke: 0.6pt + rgb("#c99a5b")))
+    place(dy: H - 0.12cm, line(length: L, stroke: 0.6pt + rgb("#c99a5b")))
+    body
+  })
+  let smd = strip({
+    for i in range(12) {
+      let cx = 0.55cm + i * 0.9cm
+      place(dx: cx - 0.42cm, dy: H / 2 - 0.42cm, circle(radius: 0.42cm,
+        fill: gradient.radial(glow.transparentize(30%), glow.transparentize(100%))))
+      place(dx: cx - 0.2cm, dy: H / 2 - 0.2cm, rect(width: 0.4cm, height: 0.4cm, radius: 1pt, fill: core, stroke: 0.5pt + rgb("#d89a4a")))
+    }
+  })
+  let cob = strip({
+    place(dx: 0.15cm, dy: H / 2 - 0.4cm, rect(width: L - 0.3cm, height: 0.8cm, radius: 0.4cm,
+      fill: gradient.linear(glow.transparentize(100%), glow.transparentize(35%), glow.transparentize(100%), angle: 90deg)))
+    place(dx: 0.3cm, dy: H / 2 - 0.17cm, rect(width: L - 0.6cm, height: 0.34cm, radius: 0.17cm, fill: core, stroke: 0.5pt + rgb("#d89a4a")))
+  })
+  let tag(t) = text(font: sans, size: 7pt, weight: "bold", fill: rgb("#e8e2d4"), tracking: 0.06em, upper(t))
+  align(center, block(fill: rgb("#2b2824"), radius: 4pt, inset: (x: 12pt, y: 12pt),
+    grid(columns: (auto, auto), column-gutter: 8pt, row-gutter: 12pt, align: (right + horizon, left + horizon),
+      tag[SMD], smd,
+      tag[COB], cob)))
+}
