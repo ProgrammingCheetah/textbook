@@ -190,8 +190,9 @@
   width: 100%, fill: accent-soft, radius: 3pt, inset: (x: 14pt, y: 12pt), above: 1.2em, below: 1.2em, {
     label-text([Key equations], color: accent)
     v(6pt)
-    grid(columns: (auto, 1fr, auto, 1fr), column-gutter: 8pt, row-gutter: 9pt,
-      ..pairs.pos().map(((n, e)) => (n, align(right, box(e)))).flatten())
+    set text(size: 9.5pt)
+    grid(columns: (auto, auto, auto, auto), column-gutter: (8pt, 22pt, 8pt), row-gutter: 9pt,
+      ..pairs.pos().map(((n, e)) => (box(n), align(right, box(e)))).flatten())
   },
 )
 

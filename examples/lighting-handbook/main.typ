@@ -343,7 +343,7 @@ Control happens in three layers. Each can fail without taking the layers below i
 )
 
 #key-equations(
-  ([Average PWM power], $overline(P) = D P_"full"$), ([Dimming resolution], $D_"min" = 1 slash 2^n$),
+  ([PWM power], $overline(P) = D P_"full"$), ([Dimming resolution], $D_"min" = 1 slash 2^n$),
   ([Gamma], $D = b^gamma$), ([Power], $P = V I$),
   ([Ohm's law], $V = I R$), ([Two-wire drop], $Delta V = 2 I L r$),
   ([Supply sizing], $P_"rated" >= 1.25 P_"load"$), ([Illuminance], $E = Phi dot "UF" slash A$),
