@@ -1,0 +1,12 @@
+[package]
+name = "textbook"
+version = "0.1.0"
+entrypoint = "src/lib.typ"
+authors = ["Andrés Littow"]
+license = "MIT"
+description = "High-school / college textbook layout: margin notes, numbered statements, worked examples, history and read-more boxes, problems with answer key, glossary, index."
+exclude = ["examples", "fonts", "scripts"]
+
+[template]
+path = "template"
+entrypoint = "main.typ"

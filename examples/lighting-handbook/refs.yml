@@ -1,0 +1,109 @@
+sll-strip:
+  type: web
+  title: DC24V RGB CCT Color Changing Flexible COB LED Strip (FCOB-24V-RGBCCT)
+  author: SuperLightingLED
+  url: https://www.superlightingled.com/dc24v-rgb-cct-color-changing-flexible-cob-led-strip-p-4545.html
+  note: Power, chips per meter, lumens per channel, cut length, CRI, CCT range, run length, headroom rule.
+
+quinled-deca:
+  type: web
+  title: QuinLED An-Penta-Deca
+  author: QuinLED
+  url: https://quinled.info/quinled-an-penta-deca/
+
+quinled-hot:
+  type: web
+  title: QuinLED An-Penta boards running hot?!
+  author: QuinLED
+  url: https://quinled.info/quinled-an-penta-boards-running-hot/
+
+quinled-caps:
+  type: web
+  title: QuinLED An-Penta-Mini Capabilities
+  author: QuinLED
+  url: https://quinled.info/quinled-an-penta-mini-capabilities/
+
+digikey-gst280:
+  type: web
+  title: Mean Well GST280A24-C6P
+  author: DigiKey
+  url: https://www.digikey.com/en/products/detail/mean-well-usa-inc/GST280A24-C6P/7703684
+
+master-gst280:
+  type: web
+  title: Mean Well GST280A24-C6P
+  author: Master Electronics
+  url: https://masterelectronics.com/en/mean-well/gst280a24c6p-48236195.html
+
+quinled-profile:
+  type: web
+  title: Aluminium profile and 12mm COB strips
+  author: QuinLED
+  url: https://quinled.info/aluminium-profile-and-12mm-cob-strips/
+
+quinled-crimps:
+  type: web
+  title: Fork Crimps for QuinLED boards
+  author: QuinLED
+  url: https://quinled.info/fork-crimps-for-quinled-boards/
+
+esphome-changelog:
+  type: web
+  title: ESPHome 2026.7.0 changelog
+  author: ESPHome
+  url: https://esphome.io/changelog/2026.7.0/
+
+quinled-esphome:
+  type: web
+  title: QuinLED An-Penta-Deca ESPhome configuration example
+  author: QuinLED
+  url: https://quinled.info/quinled-an-penta-deca-esphome-configuration-example/
+
+nobel-2014:
+  type: web
+  title: "The Nobel Prize in Physics 2014: Press release"
+  author: The Royal Swedish Academy of Sciences
+  date: 2014-10-07
+  url: https://www.nobelprize.org/prizes/physics/2014/press-release/
+
+holonyak-1962:
+  type: article
+  title: Coherent (visible) light emission from Ga(As1-xPx) junctions
+  author: ["Holonyak, Nick, Jr.", "Bevacqua, S. F."]
+  date: 1962-12
+  parent:
+    type: periodical
+    title: Applied Physics Letters
+    volume: 1
+    issue: 4
+  page-range: 82-83
+  serial-number:
+    doi: 10.1063/1.1753706
+
+doe-tm30:
+  type: web
+  title: TM-30 Frequently Asked Questions
+  author: U.S. Department of Energy, Solid-State Lighting Program
+  url: https://www.energy.gov/eere/ssl/tm-30-frequently-asked-questions
+  note: CRI (CIE 13, 1965; revised 1974, 1995) compared with IES TM-30-15.
+
+ohm-1827:
+  type: book
+  title: Die galvanische Kette, mathematisch bearbeitet
+  author: Ohm, Georg Simon
+  date: 1827
+  publisher: T. H. Riemann
+  location: Berlin
+
+awg-wiki:
+  type: web
+  title: American wire gauge
+  author: Wikipedia
+  url: https://en.wikipedia.org/wiki/American_wire_gauge
+
+nabu-esphome:
+  type: web
+  title: Nabu Casa has acquired ESPHome
+  author: Home Assistant
+  date: 2021-03-18
+  url: https://www.home-assistant.io/blog/2021/03/18/nabu-casa-has-acquired-esphome/
