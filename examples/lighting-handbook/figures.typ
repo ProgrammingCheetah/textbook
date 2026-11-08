@@ -220,3 +220,47 @@
       tag[SMD], smd,
       tag[COB], cob)))
 }
+
+// ---------- Figure: the units chain, V × I = P ----------
+#let units-chain = {
+  let card(sym, name, unit, per, val, color) = box(
+    width: 3.3cm, stroke: 0.7pt + color, radius: 3pt, inset: 7pt,
+    align(center, stack(spacing: 4pt,
+      text(font: serif, size: 20pt, weight: "bold", fill: color, sym),
+      text(size: 8pt, weight: "bold", fill: ink, name),
+      _mono(size: 7.5pt, fill: muted, unit),
+      line(length: 2.4cm, stroke: 0.4pt + rule),
+      text(size: 7.5pt, fill: ink, per),
+      _mono(size: 8pt, fill: color, val))))
+  let op(s) = box(height: 3cm, align(horizon, text(font: serif, size: 22pt, fill: muted, s)))
+  align(center, stack(dir: ltr, spacing: 6pt,
+    card($V$, [Voltage], [J/C = volt], [energy each coulomb carries], [24 J/C], rgb("#2f6fd6")),
+    op[×],
+    card($I$, [Current], [C/s = ampere], [coulombs arriving each second], [7.6 C/s], rgb("#2e9e4f")),
+    op[=],
+    card($P$, [Power], [J/s = watt], [energy delivered each second], [182 J/s], accent),
+  ))
+}
+
+// ---------- Figure: the bucket line ----------
+#let bucket-line = {
+  let W = 12.4cm
+  box(width: W, height: 3.3cm, {
+    // source and load
+    _at(0cm, 0.9cm, rect(width: 2.2cm, height: 1.5cm, radius: 3pt, stroke: 0.7pt + ink, fill: shade,
+      align(center + horizon, text(size: 8pt)[Supply \ #_mono(fill: ink)[24 V]])))
+    _at(W - 2.2cm, 0.9cm, rect(width: 2.2cm, height: 1.5cm, radius: 3pt, stroke: 0.7pt + ink, fill: shade,
+      align(center + horizon, text(size: 8pt)[Strip \ #_mono(fill: ink)[182 W]])))
+    // conveyor
+    _ln(2.2cm, 1.65cm, W - 2.2cm, 1.65cm, s: 0.6pt + muted)
+    for i in range(6) {
+      let x = 2.8cm + i * 1.25cm
+      _at(x, 1.0cm, rect(width: 0.75cm, height: 0.6cm, radius: (bottom: 3pt), stroke: 0.7pt + rgb("#2f6fd6"),
+        fill: rgb("#2f6fd6").lighten(75%)))
+      _at(x + 0.1cm, 1.06cm, _mono(size: 6pt, fill: rgb("#2f6fd6"))[24 J])
+    }
+    _at(2.6cm, 0.25cm, text(size: 7.5pt, fill: rgb("#2f6fd6"))[each bucket = 1 coulomb, holding 24 J  →  that is $V$])
+    _at(2.6cm, 2.15cm, text(size: 7.5pt, fill: rgb("#2e9e4f"))[7.6 buckets pass every second  →  that is $I$])
+    _at(2.6cm, 2.7cm, text(size: 7.5pt, fill: accent)[24 J × 7.6 per second = 182 J every second  →  that is $P$])
+  })
+}

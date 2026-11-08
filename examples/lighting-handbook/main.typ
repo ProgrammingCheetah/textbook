@@ -7,7 +7,7 @@
 #show: book.with(
   title: [The Apartment Lighting Handbook],
   short-title: [Apartment Lighting],
-  subtitle: [Chapter 1: Lighting a Room],
+  subtitle: [Chapters 1–2: Electricity and Lighting a Room],
   series: [Volume I · DIY Systems Series],
   abstract: [RGBCCT ceiling strips, analog PWM control, 24 V power and ESPHome, taught through the bedroom build.],
   author: "BIFL & DIY",
@@ -15,7 +15,7 @@
     ("Build", [Bedroom · instance 1 of 6]),
     ("System", [24 V RGBCCT COB · QuinLED An-Penta-Deca · ESPHome → Home Assistant → Apple Home]),
     ("Prepared for", [Zuri]),
-    ("Edition", [Second edition · 7 November 2026]),
+    ("Edition", [Third edition · 7 November 2026]),
   ),
   cheat-sheet: [
     #cheat-block([Key equations])[
@@ -24,18 +24,20 @@
         [Dimmest step], $D_"min" = 1 slash 2^n$,
         [Gamma], $D = b^gamma, gamma = 2.8$,
         [Power], $P = V I$,
+        [Current], $I = P slash V$,
+        [Energy], $E = P t$,
         [Ohm's law], $V = I R$,
         [Two-wire drop], $Delta V = 2 I L r$,
         [Illuminance], $E = Phi dot "UF" slash A$)
     ]
     #cheat-block([Sizing rules])[
       - Supply: $P_"rated" >= 1.25 P_"load"$. If not, cap outputs in firmware.
-      - Strip: 20 W/m at full; about 10 m per feed at 24 V.
+      - Strip: 13 W/m at full; BTF rates about 5 m per one-side feed. Load $=$ W/m × m.
       - Feed: keep drop under about 3% of 24 V. 14 AWG ≈ 8.3 mΩ/m.
       - Deca: 5 A per channel, 30 A total.
     ]
     #cheat-block([Pads at a cut])[
-      V+ (shared) · R · G · B · WW · CW. Order varies by maker: read the printed letters, never the wire colors. Cut only on the printed line (every 41.6 mm).
+      V+ (shared) · R · G · B · WW · CW. Order varies by maker: read the printed letters, never the wire colors. Cut only on the printed line (every 41.5 mm). Joins are soldered.
     ]
     #cheat-block([Fault isolation])[
       - One color dark on one segment → that pigtail or terminal.
@@ -53,7 +55,7 @@
       + Expose to Apple Home. Stop. Document.
     ]
     #cheat-block([ESPHome output line])[
-      #text(size: 7.2pt, raw("- { platform: ledc, id: a_r, pin: GPIO_A_R,\n    frequency: 19531Hz, max_power: 0.8 }", lang: "yaml", block: true))
+      #text(size: 7.2pt, raw("- { platform: ledc, id: a_r, pin: GPIO_A_R,\n    frequency: 19531Hz }", lang: "yaml", block: true))
     ]
   ],
 )
@@ -62,19 +64,21 @@
   about: [
     This is a book about lighting your apartment with LED strips you install, control and repair yourself. It teaches from first principles, the way a school textbook does, but every example uses the real numbers from your build. You don't need to read it in order. Each chapter stands on its own and points back to the pages it builds on, so you can jump straight to the part you need tonight.
 
-    The book is organized into parts. *Part I* explains how a lit room works: light, strips, dimming, power and control, each taught through the bedroom. Later volumes take one subsystem each and go deeper. *The Part of Tens* closes the book with short lists you can scan in a minute.
+    The book is organized into parts. *Part I* explains how a lit room works: light, strips, dimming, power and control, each taught through the bedroom. Later volumes take one subsystem each and go deeper. Chapter 1 builds the four electrical units every calculation uses. *The Part of Tens* closes the book with short lists you can scan in a minute.
   ],
   assumptions: (
-    [You remember a little school physics: voltage, current and power. If not, Chapter 1 opens with a refresher.],
-    [You can use a screwdriver and a crimper, and you're willing to learn to read a datasheet.],
+    [You remember a little school math: fractions, powers of ten, rearranging an equation. Chapter 1 builds the electricity you need from there.],
+    [You can use a screwdriver and a soldering iron, and you're willing to learn to read a datasheet.],
     [You will never open a mains-voltage device. Everything you wire in this book runs at 24 V.],
     [You run Home Assistant, or you're willing to. The book covers what happens when it's down.],
   ),
   beyond: [The Cheat Sheet at the front of this book collects the formulas, sizing rules and fault table on one page. The ESPHome configuration lives in your git repository, which is the real source of truth for the build.],
-  where-next: [If you're about to buy parts, start with Appendix B and the supply sizing in Section 1.4. If something is already installed and misbehaving, go to Appendix E. If you want to understand the whole system, start at Chapter 1 and read straight through.],
+  where-next: [If you're about to buy parts, start with Appendix B and #pref(<ex:bedroom>). If the formulas feel shaky, start with Chapter 1: it derives every one of them. If something is already installed and misbehaving, go to Appendix E. If you want to understand the whole system, start at Chapter 1 and read straight through.],
 )
 
 #part([How a Lit Room Works], blurb: [Five small systems make a ceiling of light: a source, a controller, a supply, a channel and the software that ties them together. This part builds each one, using the bedroom as the worked case.])
+
+#include "ch-units.typ"
 
 // ======================================================================
 #chapter(
@@ -90,7 +94,7 @@
 )
 
 #background[
-  You need three ideas from school physics. *Voltage* is the push that drives charge around a circuit, in volts (V). *Current* is how much charge flows past a point each second, in amperes (A). *Power* is how fast energy is used, in watts (W). If any of these feel shaky, the first two Read More links at the end of Section 1.4 are a ten-minute refresher.
+  You need the four electrical units: charge in coulombs, current in amperes (coulombs per second), voltage in volts (joules per coulomb) and power in watts (joules per second). Chapter 1 builds them from scratch and derives $P = V I$ (#pref(<thm:pvi>)). If any of them feel shaky, read it first.
 ]
 
 == What light is made of
@@ -106,12 +110,12 @@ The trouble is that RGB white is a poor white. Each emitter is a narrow spike of
   The first visible LED glowed red. Nick Holonyak Jr. demonstrated it at General Electric's lab near Syracuse in October 1962, using a gallium arsenide phosphide crystal @holonyak-1962. Green followed, but blue resisted for three decades. Without blue there was no white LED, because phosphor needs short-wavelength light to pump. Isamu Akasaki and Hiroshi Amano at Nagoya University, and Shuji Nakamura at Nichia in Tokushima, finally made bright blue gallium nitride LEDs in the early 1990s. They shared the 2014 Nobel Prize in Physics for it @nobel-2014. Every white emitter on your strip is a blue die under phosphor: their invention, mass-produced.
 ]
 
-Your strip carries two phosphor whites: a warm one near 2800–3200 K and a cool one near 6000–6500 K @sll-strip. Mixing the two places the white anywhere between them.
+Your strip carries two phosphor whites: a warm one near 3000 K and a cool one near 6000 K, as printed on BTF's packaging @btf-fcob. Mixing the two places the white anywhere between them.
 
 #definition(title: [Correlated color temperature, CCT])[The temperature, in kelvin, of an ideal glowing body whose color most closely matches a given white light. Lower values are warmer (more orange); higher values are cooler (more blue).] <def:cct>
 
 #did-you-know[The naming runs backward. "Warm" white has the *lower* temperature: 2700 K is a candle-like glow, 6500 K is overcast daylight.]
-#figure(cct-scale, caption: [Correlated color temperature. Candlelight sits left of this scale, overcast daylight at its right end. Your strip spans roughly 2800–6500 K.]) <fig:cct>
+#figure(cct-scale, caption: [Correlated color temperature. Candlelight sits left of this scale, overcast daylight at its right end. Your strip spans roughly 3000–6000 K.]) <fig:cct>
 
 #intuition(title: [Why color has a temperature])[
   Heat any solid and it glows. A stove coil goes dull red, then orange; a tungsten filament at about 2700 K is yellow-white; the Sun's surface, near 5800 K, looks white. Physicists call the ideal version a *blackbody*, and its color depends only on its temperature. An LED is not hot at all, so its CCT is a comparison: "this white looks like a blackbody at 3000 K." That is why the word *correlated* is in the name.
@@ -123,7 +127,7 @@ RGB plus CCT gives the strip type its name: #term("RGBCCT"), five channels in al
 #definition(title: [Color rendering index, CRI or R#sub[a]])[A score out of 100 for how faithfully a light reproduces a standard set of test colors, compared with a reference source of the same CCT.] <def:cri>
 
 #sidenote[CRI dates from 1965, written to rate early fluorescent tubes. It averages only eight pastel samples. IES TM-30 (2015) scores 99 samples and catches the saturated reds CRI misses @doe-tm30.]
-Your strip is specified above 90 @sll-strip, the threshold most lighting designers treat as good for living spaces.
+Your strip is specified above 90 @btf-960, the threshold most lighting designers treat as good for living spaces.
 
 #check-yourself(
   ([Why does an RGB-only strip make a poor white, even at full power?], [Each emitter is a narrow spike, so wavelengths between the spikes are missing; colors that reflect those wavelengths look dull.]),
@@ -140,12 +144,12 @@ Your strip is specified above 90 @sll-strip, the threshold most lighting designe
 
 #keyterm("FPC")[Flexible printed circuit, the ribbon the LEDs sit on.]
 #keyterm("COB")[Chip on board. Dense LED dies under one phosphor layer, giving a dotless line.]
-An LED strip is a #term("flexible printed circuit", display: [flexible printed circuit]): a thin ribbon of copper on polyimide, with LEDs soldered along it. Older strips use spaced packages called SMD, which show as a row of dots. Your strip is #term("COB"), chip on board: 840 tiny dies per meter under a continuous strip of phosphor @sll-strip, so it reads as one unbroken line.
+An LED strip is a #term("flexible printed circuit", display: [flexible printed circuit]): a thin ribbon of copper on polyimide, with LEDs soldered along it. Older strips use spaced packages called SMD, which show as a row of dots. Your strip is #term("COB"), chip on board: 960 tiny dies per meter under a continuous strip of phosphor @btf-960, so it reads as one unbroken line.
 
 #figure(smd-vs-cob, caption: [SMD and COB strips, lit. SMD packages sit apart and show as dots; COB dies sit under one continuous phosphor strip and read as a line.]) <fig:cob>
 
 #trade[Small resistors on each circuit set the current through its LEDs. That is why the strip can run straight from a constant-voltage supply.]
-The strip repeats one short circuit along its length, each with copper pads at both ends. You can cut between any two. On your strip the interval is 41.6 mm @sll-strip, marked by a printed line.
+The strip repeats one short circuit along its length, each with copper pads at both ends. You can cut between any two. On your strip the interval is 41.5 mm @btf-960, marked by a printed line.
 
 #definition(title: [Cut interval])[The length of one repeating circuit on a strip. Cuts are only valid at multiples of it; the partial circuit left by a cut anywhere else does not light.] <def:cut>
 
@@ -174,7 +178,7 @@ This structure makes faults readable. Because power is shared and the returns ar
 )[Pigtail colors vary by maker and even by batch. A swapped pair does not damage anything, but it makes @thm:fault point at the wrong channel.]
 
 #check-yourself(
-  ([Can you cut the strip 20 mm from a cut line?], [No. Cuts are valid only at multiples of the 41.6 mm cut interval; the partial circuit will not light.]),
+  ([Can you cut the strip 20 mm from a cut line?], [No. Cuts are valid only at multiples of the 41.5 mm cut interval; the partial circuit will not light.]),
   ([All five colors on one segment are dark. Where do you look first?], [The shared supply path: the supply, the controller's input fuse, and the +24 V conductor to that segment.]),
 )
 
@@ -258,7 +262,7 @@ The supply is the only part of the build that touches mains, by design. It is a 
 #notation($I$, [current], unit: [A])
 
 #keyterm("Derating")[Running a part below its maximum rating to extend its life.]
-Strip datasheets give watts per meter; multiply by length for the load. A supply run near its limit runs hot, and heat is what ages its capacitors. The strip maker recommends 25% headroom @sll-strip.
+Strip datasheets give watts per meter; multiply by length for the load. A supply run near its limit runs hot, and heat is what ages its capacitors. BTF tells you to keep the strip below 80% of the supply's maximum @btf-960, which is the same rule written the other way, since $1 slash 1.25 = 0.8$.
 
 #remember[Size the supply at 1.25 × the load. If it doesn't fit, lower the load in firmware, not the margin.]
 #principle(title: [Supply sizing])[Choose a supply with rated power $P_"rated" >= 1.25 dot P_"load"$. If no suitable supply exists, *derate* the load in firmware until the inequality holds.] <pr:sizing>
@@ -267,11 +271,10 @@ Strip datasheets give watts per meter; multiply by length for the load. A supply
 The bedroom is the first real test of this principle.
 
 #example(title: [Sizing the bedroom supply], steps: (
-  ([Given], [Perimeter about 14 m. Strip draws 20 W/m at full @sll-strip. Supply: Mean Well GST280A24, 280 W @digikey-gst280.]),
-  ([Load], [$P_"load" = 14 "m" times 20 "W/m" = 280 "W"$]),
-  ([Need], [$1.25 times 280 = 350 "W" > 280 "W"$. The rule fails.]),
-  ([Fix], [Cap every output at 80% in firmware: $P_"load" = 0.8 times 280 = 224 "W"$.]),
-  ([Check], [$1.25 times 224 = 280 "W" <= 280 "W"$. The rule holds exactly, and the room still gets far more light than it needs (@ex:lux).]),
+  ([Given], [Perimeter about 14 m. Strip draws 13 W/m at full @btf-960. Supply: Mean Well GST280A24, 280 W @digikey-gst280.]),
+  ([Load], [$P_"load" = 14 "m" times 13 "W/m" = 182 "W"$.]),
+  ([Need], [$1.25 times 182 approx 228 "W" <= 280 "W"$. The rule holds with no firmware cap.]),
+  ([What if], [A 20 W/m strip would load the supply to $14 times 20 = 280$ W and need 350 W: the rule fails. The fix is to derate in firmware: cap every output at 80%, so $P_"load" = 224$ W and $1.25 times 224 = 280$ W. Keep that move for rooms where the supply is tight.]),
 ))[] <ex:supply>
 
 #mistake(
@@ -280,7 +283,7 @@ The bedroom is the first real test of this principle.
 )[A supply at 100% runs at its hottest, and its electrolytic capacitors dry out fastest there. The result is a supply that works on day one and fails in year two.]
 
 #trade[Ripple and noise is the AC left on a DC output. This supply is rated 280 mV peak to peak @master-gst280.]
-A capped supply also runs cooler, which slows the drying of its electrolytic capacitors, the most common way these supplies eventually fail.
+A supply loaded to 65%, as this one is, also runs cooler, which slows the drying of its electrolytic capacitors, the most common way these supplies eventually fail.
 
 === Resistance and voltage drop
 
@@ -304,13 +307,13 @@ Current flowing through copper loses voltage along the way. That loss heats the 
 The gauge of a wire sets its resistance per meter, so the corollary turns wire choice into arithmetic.
 
 #example(title: [Feed wire and channel current], steps: (
-  ([Feed], [$I = P slash V = 224 "W" slash 24 "V" approx 9.3 "A"$ on the brick-to-Deca wire.]),
-  ([Drop], [14 AWG copper has $r approx 8.3 "mΩ/m"$. For a 3 m run: $Delta V = 9.3 times 6 times 0.0083 approx 0.46 "V"$, or 1.9% of 24 V. Acceptable.]),
-  ([Per ch.], [Each 7 m segment draws 140 W across five channels: $140 slash 5 slash 24 approx 1.2 "A"$ per channel, about a quarter of the Deca's 5 A rating @quinled-deca.]),
+  ([Feed], [$I = P slash V = 182 "W" slash 24 "V" approx 7.6 "A"$ on the brick-to-Deca wire.]),
+  ([Drop], [14 AWG copper has $r approx 8.3 "mΩ/m"$. For a 3 m run: $Delta V = 7.6 times 6 times 0.0083 approx 0.38 "V"$, or 1.6% of 24 V. Acceptable.]),
+  ([Per ch.], [Each 7 m segment draws $7 times 13 = 91$ W across five channels: $91 slash 5 slash 24 approx 0.76 "A"$ per channel, about 15% of the Deca's 5 A rating @quinled-deca.]),
 ))[] <ex:feed>
 
 #keyterm("Power injection")[Feeding power into a second point on a long run to limit voltage drop.]
-The same loss happens inside the strip's own copper. At 24 V the maker's rule is about 10 m per feed @sll-strip. Past that, you feed power into a second point, called #term("power injection"). Each bedroom segment is 7 m, so neither needs it.
+The same loss happens inside the strip's own copper. BTF recommends about 5 m when powering from one side, and says to feed runs over 6 m in parallel @btf-960. Feeding power into a second point is called #term("power injection"). Each bedroom segment is 7 m, a little past that line. The plan is to test before adding wire: light a full 7 m segment on the bench at full warm white and compare the two ends. If the far end looks dimmer or pinker, inject at the far corner, where both segments end.
 
 #check-yourself(
   ([A 24 V supply delivers 6 A. What power is it supplying?], [$P = V I = 24 times 6 = 144$ W.]),
@@ -332,19 +335,19 @@ A 12 × 11 ft bedroom has a perimeter of about 14 m. Rather than one long run, i
 
 #figure(room-layout, caption: [Bedroom layout, seen from above. The two segments meet in the far corner without being joined.]) <fig:layout>
 
-Splitting the run does three things at once. It spreads the load across ten channels instead of five. It keeps each run under the 10 m single-feed limit. And it puts both segment starts at the controller, so no unlit lead wire has to cross the ceiling.
+Splitting the run does three things at once. It spreads the load across ten channels instead of five. It keeps each run close to the maker's single-feed length, and because both segments end in the same corner, one injection point there would fix both. And it puts both segment starts at the controller, so no unlit lead wire has to cross the ceiling.
 
-#keyterm("Lumen, lux")[Lumens measure the total light a source emits. Lux measures lumens falling on one square meter.]
 Because this strip replaces the room's main light, it has to be bright enough on its own. One more worked example settles that.
+#keyterm("Lumen, lux")[Lumens measure the total light a source emits. Lux measures lumens falling on one square meter.]
 #notation($Phi$, [luminous flux], unit: [lm])
 #notation($E$, [illuminance], unit: [lx])
 
 #example(title: [Is it bright enough to be the main light?], steps: (
-  ([Given], [Each white channel gives about 1,300 lm/m at full @sll-strip. Room: 11 × 12 ft, about 12.3 m². Firmware cap 80%.]),
-  ([Assume], [Only about 40% of the emitted light reaches the working plane after bouncing off walls and ceiling. This utilization factor (UF) is an assumption for a ceiling cove; real rooms vary.]),
-  ([Flux], [$Phi = 14 times 1300 times 0.8 approx 14 thin 600 "lm"$ from one white channel alone.]),
-  ([Lux], [$E = Phi dot "UF" slash A = 14 thin 600 times 0.4 slash 12.3 approx 470 "lx"$.]),
-  ([Result], [That exceeds what general bedroom lighting typically aims for, using only one of the two whites. Brightness is not a constraint. Confirm with a lux-meter app after install.]),
+  ([Goal], [BTF does not publish lumens per meter @btf-960, so work backward: how much light must each white channel give?]),
+  ([Assume], [A target of 300 lx on the working plane, generous for general bedroom light. Only about 40% of the emitted light reaches that plane after bouncing off walls and ceiling. Both numbers are assumptions; this utilization factor (UF) suits a ceiling cove, and real rooms vary.]),
+  ([Flux], [Rearrange $E = Phi dot "UF" slash A$: $Phi = E A slash "UF" = 300 times 12.3 slash 0.4 approx 9 thin 200 "lm"$.]),
+  ([Per m], [$9 thin 200 slash 14 approx 660 "lm/m"$ from one white channel at full.]),
+  ([Result], [If one white falls short, both whites together give roughly double. Measure with a lux-meter app after install; if it is still dim, the 300 lx target needs a task lamp, not more strip.]),
 ))[] <ex:lux>
 
 === The channel
@@ -355,11 +358,10 @@ The strip sits in an aluminum *channel* with an opal diffuser. The channel is a 
 #principle(title: [Thermal life])[An LED's lifetime is governed by its junction temperature. Lowering that temperature, by heat-sinking and by derating drive current, extends useful life.] <pr:thermal>
 
 #trade[Seat the diffusers on the bench before mounting. Snapping them in overhead is the most-reported frustration.]
-Aluminum plus the 80% cap keeps the junction cool; the maker rates the strip for 50,000 hours @sll-strip.
+Aluminum carries heat away from the dies, and the strip's 13 W/m is a modest load for a 12 mm channel.
 
 == How you control it
 
-#trade[Land wires in screw terminals with fork crimps or ferrules, not bare strands @quinled-crimps.]
 Control happens in three layers. Each can fail without taking the layers below it down.
 
 #keyterm("YAML")[A plain-text configuration format. Your ESPHome file is the controller's whole recipe.]
@@ -400,7 +402,7 @@ Control happens in three layers. Each can fail without taking the layers below i
   [The strip is common anode: one shared +24 V, five switched returns. One dark color points to its own return path (#pref(<thm:fault>)).],
   [Controllers dim by PWM. Frequency prevents flicker; bit depth sets how finely the light fades to dark.],
   [Size a supply at 1.25 × load; when that does not fit, derate in firmware.],
-  [Current heats wire and drops voltage, $Delta V = I dot 2 L r$. Inject power past about 10 m at 24 V.],
+  [Current heats wire and drops voltage, $Delta V = I dot 2 L r$. BTF rates about 5 m per one-side feed; test longer runs and inject if the far end dims.],
   [Splitting a room into segments spreads the load and avoids lead wires.],
   [Control runs on the board first, so the wall switch survives any network failure.],
 )
@@ -414,9 +416,9 @@ Control happens in three layers. Each can fail without taking the layers below i
 
 #problems(intro: [Answers to all problems are in the Answer Key at the back.])
 
-#problem(level: 1, answer: [The fault is in segment B's blue return path: a loose or misaligned clip at B's pigtail, a broken blue conductor, or the blue wire not landed in its terminal. A failed MOSFET on that one channel is possible but rarer. The shared supply is ruled out, since the other four colors work.])[Segment B's blue channel is dark, but red, green and both whites work. Using @thm:fault, name the likely causes.]
+#problem(level: 1, answer: [The fault is in segment B's blue return path: a cold or cracked solder joint at B's pigtail, a broken blue conductor, or the blue wire not landed in its terminal. A failed MOSFET on that one channel is possible but rarer. The shared supply is ruled out, since the other four colors work.])[Segment B's blue channel is dark, but red, green and both whites work. Using @thm:fault, name the likely causes.]
 
-#problem(level: 1, answer: [$21 times 20 = 420$ W at full. The principle asks for $1.25 times 420 = 525$ W of supply, beyond any single desktop brick. Use two supplies feeding separate segments, or derate in firmware.])[The living room is about 21 m, split into three 7 m segments. What load must the supply side carry at full output, and what does the sizing principle ask for?]
+#problem(level: 1, answer: [$21 times 13 = 273$ W at full. The principle asks for $1.25 times 273 approx 341$ W, more than the 280 W brick. Either buy a larger supply, or derate in firmware to 80%: $0.8 times 273 approx 218$ W, and $1.25 times 218 approx 273 "W" <= 280 "W"$.])[The living room is about 21 m, split into three 7 m segments. What load must the supply side carry at full output, and what does the sizing principle ask for?]
 
 #problem(level: 2, answer: [The eye is most sensitive to change at the dark end, and gamma correction compresses the dark end of the slider into very few duty-cycle values. At 8-bit those few values are 1/256 apart, a visible jump each time. At 12-bit they are 1/4096 apart, too small to see.])[Explain in your own words why the light fades in visible steps near zero at 8-bit but not at 12-bit.]
 
@@ -424,7 +426,7 @@ Control happens in three layers. Each can fail without taking the layers below i
 
 #problem(level: 1, answer: [$Delta V = 4 times 18 times 0.053 approx 3.8$ V, about 16% of 24 V. Not acceptable: the far end would visibly dim and shift color. Use 14–16 AWG for a feed like that.])[A 9 m feed on 22 AWG wire ($r approx 53$ mΩ/m) carries 4 A. Is the drop acceptable at 24 V?]
 
-#problem(level: 1, answer: [The load may be at most $150 slash 1.25 = 120$ W, so $120 slash 20 = 6$ m at full output.])[Your supply is rated 150 W. How many meters of this strip can it drive at full output while respecting the sizing principle?]
+#problem(level: 1, answer: [The load may be at most $150 slash 1.25 = 120$ W, so $120 slash 13 approx 9.2$ m at full output.])[Your supply is rated 150 W. How many meters of this strip can it drive at full output while respecting the sizing principle?]
 
 #problem(level: 2, answer: [$D = 0.10^2.8 approx 0.0016$, or about 0.16% duty: roughly 6–7 steps of the 4,096 available.])[At 12-bit and $gamma = 2.8$, what duty cycle does a slider setting of 10% produce?]
 
@@ -451,9 +453,9 @@ Control happens in three layers. Each can fail without taking the layers below i
 #ten-list(
   ([Sizing the supply to exactly the load], [A supply at 100% runs hot and dries its capacitors fastest. Size at 1.25 × load, or cap the outputs in firmware (#pref(<pr:sizing>)).]),
   ([Trusting pigtail wire colors], [Colors vary by maker and batch. Read the letters printed on the pads at every cut.]),
-  ([Cutting off the line], [A cut between marks leaves a partial circuit that never lights. Cut only on the printed line, every 41.6 mm.]),
+  ([Cutting off the line], [A cut between marks leaves a partial circuit that never lights. Cut only on the printed line, every 41.5 mm.]),
   ([Ignoring voltage drop], [A long thin feed turns the far end dim and yellow. Do the $Delta V = 2 I L r$ arithmetic before buying wire (@cor:drop).]),
-  ([Running past one feed], [At 24 V, plan on about 10 m per feed. Longer runs need power injection, or a split into segments.]),
+  ([Running past one feed], [Read the maker's single-feed length (about 5 m for your strip). Test anything longer, and inject power or split into segments if the far end dims.]),
   ([Buying "12 mm" channel that isn't], [Internal ridges sized for 10 mm strips crush a COB strip. Test-fit one piece first.]),
   ([Landing bare strands in screw terminals], [Strands splay and loosen. Use fork crimps or ferrules.]),
   ([Buying a supply on a marketplace], [Counterfeit Mean Well units are common. Buy from an authorized distributor.]),
@@ -470,7 +472,7 @@ These are the interfaces every room shares. Changing one reopens the decision fo
 #wide(figure(
   table(columns: (0.9fr, 1.8fr, 2fr),
     [Layer], [Standard], [Why it is the standard],
-    [Strip], [24 V RGBCCT COB, 12 mm, 6-pin pads], [Any maker's strip drops in. About 10 m per feed at 24 V versus about 5 m at 12 V.],
+    [Strip], [24 V RGBCCT COB, 12 mm, 6-pin pads], [Any maker's strip drops in. At 24 V, half the current of 12 V for the same watts (#pref(<thm:pvi>)).],
     [Power], [24 V certified plug-in supply, IEC C14 inlet], [The only mains path is a certified product. No hardwiring in a rental.],
     [Controller], [ESP32 analog PWM, five channels per segment], [Reflashable. Any ESP32 PWM board can take over.],
     [Firmware], [ESPHome, YAML kept in git], [Plain-file configuration, local only, foundation-maintained.],
@@ -485,14 +487,14 @@ These are the interfaces every room shares. Changing one reopens the decision fo
 #wide(figure(
   table(columns: (1fr, 2.2fr, 0.8fr, 0.7fr),
     [Part], [Specification], [Qty], [Approx.],
-    [LED strip], [SuperLightingLED FCOB-24V-RGBCCT, IP20, 5 m reel], [3], [\$98.94],
+    [LED strip], [BTF-LIGHTING FCOB RGBCCT, 960 LEDs/m, 24 V, UL listed, 5 m reel], [3], [\$90.00],
     [Controller], [QuinLED An-Penta-Deca], [1], [\$39.99],
     [Power supply], [Mean Well GST280A24-C6P, 24 V, 280 W], [1], [\~\$75],
     [Mains cord], [US plug to IEC C13], [1], [\$4.99],
     [Channel], [Aluminum, 12 mm, opal diffuser, 1 m], [15], [\$104.85],
-    [Strip-to-wire], [6-pin, 12 mm], [2 + 2 spare], [\$3.96],
-    [Strip-to-strip], [6-pin, 12 mm, straight], [2 + 1 spare], [\~\$3],
-    [Corner], [6-pin, 12 mm, L-shape], [2 + 1 spare], [\~\$5],
+    [Pigtail wire], [6-conductor, 22 AWG, soldered to each segment start], [about 1 m], [—],
+    [Joint wire], [6-conductor jumpers for joins and corners], [about 1 m], [—],
+    [Solder supplies], [Flux, heat-shrink tubing], [1 set], [—],
     [Feed wire], [14 AWG, two-conductor], [about 3 m], [—],
     [Wall button], [Momentary, low voltage, plus 22 AWG pair], [1 + about 4 m], [—],
     [Fork crimps], [For the Deca's screw terminals], [1 set], [—],
@@ -501,10 +503,10 @@ These are the interfaces every room shares. Changing one reopens the decision fo
   caption: [Bill of materials for the bedroom (instance 1 of 6).],
 ))
 #tip[Buy one channel piece first and test-fit the strip before ordering the other fourteen.]
-About \$340 before shipping. Each 7 m segment is one 5 m reel plus a 2 m piece from the third reel, joined with a strip-to-strip connector. Buy one channel piece first and test-fit the strip before ordering the rest.
+About \$330 before shipping. Each 7 m segment is one 5 m reel plus a 2 m piece from the third reel. BTF's COB strip takes no clip connectors after cutting, so every join and corner is soldered with a short 6-conductor jumper. Buy one channel piece first and test-fit the strip before ordering the rest.
 
 #chapter([ESPHome skeleton])
-Fill the GPIO placeholders from QuinLED's Deca pinout guide and ESPHome example @quinled-esphome. The `max_power` setting is the 80% derate from @ex:supply.
+Fill the GPIO placeholders from QuinLED's Deca pinout guide and ESPHome example @quinled-esphome. No `max_power` cap is needed, because the bedroom load fits the supply (@ex:supply). Add `max_power: 0.8` to every output only in a room where it doesn't.
 
 #wide(```yaml
 esphome:
@@ -519,8 +521,8 @@ ota:
   - platform: esphome
 
 output:                     # one per channel
-  - { platform: ledc, id: a_r,  pin: GPIO_A_R,  frequency: 19531Hz, max_power: 0.8 }
-  - { platform: ledc, id: a_g,  pin: GPIO_A_G,  frequency: 19531Hz, max_power: 0.8 }
+  - { platform: ledc, id: a_r,  pin: GPIO_A_R,  frequency: 19531Hz }
+  - { platform: ledc, id: a_g,  pin: GPIO_A_G,  frequency: 19531Hz }
   # ...a_b, a_ww, a_cw, then the same five for segment B
 
 light:
@@ -551,10 +553,10 @@ Build in one window. Test on the bench before anything goes on the ceiling.
 
 + Flash ESPHome over USB-C and confirm the device appears in Home Assistant.
 + Bench test: supply → Deca → a 1 m offcut. Cycle each color alone, then both whites. Confirm the button toggles it.
-+ Cut and join each 7 m segment on the bench. Light each full segment on the floor.
++ Practice two solder joints on the 1 m offcut. Then cut and solder each 7 m segment on the bench, and light each full segment on the floor at full warm white. Compare the near and far ends for voltage drop.
 + Test-fit strip in channel and seat the diffusers on the bench.
-+ Mount the Deca and run raceway for the feed and button wires.
-+ Mount the channel, seat the strips, and connect the pigtails. Corners use L-connectors.
++ Mount the Deca and run raceway for the feed and button wires. Land every wire in the screw terminals with a fork crimp or ferrule, never bare strands @quinled-crimps.
++ Mount the channel, seat the strips, and connect the pigtails. Corners are soldered jumpers, made on the bench.
 + Run at full white for 30 minutes, then touch-check the supply, the Deca and the strip ends for heat.
 + Expose to Apple Home. The done-state is reached: stop here.
 + Document: photograph the terminals, commit the final YAML, record actual lengths in this book.
@@ -564,10 +566,10 @@ Build in one window. Test on the bench before anything goes on the ceiling.
   table(columns: (1fr, 1.2fr, 1.3fr),
     [Symptom], [Likely cause], [Fix],
     [Nothing lights], [Supply off or dead, blown fuse, controller offline], [Check supply LED, then fuse, then ESPHome logs],
-    [One color dark on one segment], [Loose clip or wrong pad order at that pigtail (@thm:fault)], [Reseat or re-crimp; check pad letters],
+    [One color dark on one segment], [Cold solder joint or wrong pad order at that pigtail (@thm:fault)], [Reflow the joint; check pad letters],
     [One color dark on both segments], [Wrong GPIO in YAML], [Fix pin mapping and reflash],
-    [Dead past one point], [Broken joint at a cut or connector], [Bridge with a strip-to-strip clip or solder],
-    [Far end dimmer or yellower], [Voltage drop], [Inject power at the far end; check connector contact],
+    [Dead past one point], [Broken joint at a cut or connector], [Reflow or re-solder the joint],
+    [Far end dimmer or yellower], [Voltage drop], [Inject power at the far corner (both segments end there)],
     [Flicker on camera or when dim], [PWM frequency too low], [Raise `frequency` in YAML],
     [Whites differ between segments], [Different production batches], [Order one batch; trim white balance in software],
     [Button dead, app works], [Button wiring or pin configuration], [Check continuity and `binary_sensor` logs],
@@ -587,7 +589,7 @@ Build in one window. Test on the bench before anything goes on the ceiling.
 #back-chapter([References])
 #bibliography("refs.yml", title: none, style: "american-medical-association")
 #v(0.6em)
-#text(size: 9pt)[Copper resistance per meter (@ex:feed and Problem 1.5) uses standard AWG table values. The utilization factor in @ex:lux is an assumption, not a measured value.]
+#text(size: 9pt)[Copper resistance per meter (@ex:feed and the Chapter 2 problems) uses standard AWG table values. The 300 lx target and utilization factor in @ex:lux, and the electricity rate in @ex:kwh, are assumptions, not measured values. The strip's color temperatures come from BTF's packaging, not its datasheet.]
 
 #back-chapter([Further reading])
 #further-reading()

@@ -107,3 +107,43 @@ nabu-esphome:
   author: Home Assistant
   date: 2021-03-18
   url: https://www.home-assistant.io/blog/2021/03/18/nabu-casa-has-acquired-esphome/
+
+btf-960:
+  type: web
+  title: FCOB RGBCCT LED Strip 960 LEDs/m DC24V
+  author: BTF-LIGHTING
+  url: https://www.btf-lighting.com/products/fcob-cob-fob-rgbcct-led-light-strip-6pin-dc24v-960-leds-12mm-flexible-linear-lights-high-density-dimmable-18w
+  note: Max 13 W/m, Ra > 90, cut every 41.5 mm, 5 m recommended per one-side feed, keep load under 80% of supply.
+
+btf-fcob:
+  type: web
+  title: FCOB LED Strip collection
+  author: BTF-LIGHTING
+  url: https://www.btf-lighting.com/collections/fcob-led-strip
+  note: RGBCCT packaging lists warm white 3000 K and cool white 6000 K.
+
+bipm-ampere:
+  type: web
+  title: "SI base unit: ampere (A)"
+  author: BIPM
+  url: https://www.bipm.org/en/si-base-units/ampere
+
+nist-ampere:
+  type: web
+  title: "Ampere: Introduction"
+  author: NIST
+  url: https://www.nist.gov/si-redefinition/ampere-introduction
+  note: Old parallel-wire definition, its problems, and the 20 May 2019 redefinition via the elementary charge.
+
+nist-sp330:
+  type: web
+  title: "SP 330, Appendix 1: Decisions of the CGPM and the CIPM"
+  author: NIST
+  url: https://www.nist.gov/pml/special-publication-330/sp-330-appendix-1
+  note: 11th CGPM (1960) table of derived units, joule N·m, watt J/s, coulomb A·s, volt W/A.
+
+iec-1881:
+  type: web
+  title: International Electrical Congress
+  author: Wikipedia
+  url: https://en.wikipedia.org/wiki/International_Electrical_Congress
